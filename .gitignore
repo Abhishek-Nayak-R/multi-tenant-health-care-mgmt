@@ -1,0 +1,33 @@
+# Compiled class file
+*.class
+
+# Log files
+*.log
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven build directories
+**/target/
+
+# Node/Angular dependency and build files
+**/node_modules/
+**/dist/
+**/.angular/
+
+# IDE/Editor files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Operating System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini

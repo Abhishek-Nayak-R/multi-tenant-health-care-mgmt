@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # Multi-tenant Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: hms-postgres
+    environment:
+      POSTGRES_USER: hms_user
+      POSTGRES_PASSWORD: hms_password
+      POSTGRES_DB: hms_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hms_user -d hms_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Elasticsearch Search Index
+  elasticsearch:
+    image: elasticsearch:7.17.10
+    container_name: hms-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cat/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Authentication Service
+  auth-service:
+    build:
+      context: ../backend/auth-service
+      dockerfile: Dockerfile
+    container_name: hms-auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - JWT_SECRET=hms_super_secret_jwt_key_that_is_at_least_256_bits_long_123456789
+    depends_on:
+      - postgres
+
+  # Patient Service (Multi-Tenant CRUD)
+  patient-service:
+    build:
+      context: ../backend/patient-service
+      dockerfile: Dockerfile
+    container_name: hms-patient-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=hms_db
+      - DB_USER=hms_user
+      - DB_PASSWORD=hms_password
+      - JWT_SECRET=hms_super_secret_jwt_key_that_is_at_least_256_bits_long_123456789
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Search Service (Elasticsearch Consumer & API)
+  search-service:
+    build:
+      context: ../backend/search-service
+      dockerfile: Dockerfile
+    container_name: hms-search-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - JWT_SECRET=hms_super_secret_jwt_key_that_is_at_least_256_bits_long_123456789
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # Angular Frontend
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: hms-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-service
+      - patient-service
+      - search-service
+
+volumes:
+  postgres_data:
+  elasticsearch_data:

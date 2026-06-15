@@ -1,0 +1,11 @@
+server:
+  port: 8083
+
+spring:
+  elasticsearch:
+    uris: http://${ELASTICSEARCH_HOST:localhost}:${ELASTICSEARCH_PORT:9200}
+    connection-timeout: 5s
+    socket-timeout: 30s
+
+jwt:
+  secret: hms_super_secret_jwt_key_that_is_at_least_256_bits_long_123456789

@@ -1,0 +1,6 @@
+server:
+  port: 8081
+
+jwt:
+  secret: hms_super_secret_jwt_key_that_is_at_least_256_bits_long_123456789
+  expiration: 86400000 # 24 hours in milliseconds
