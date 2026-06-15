@@ -18,8 +18,6 @@ AuraHealth is a modern, enterprise-grade **Electronic Health Record (EHR) & Heal
 
 ```text
 multi-tenant-health-care-mgmt/
-├── docs/                               # Architectural & Migration Analysis
-│   └── migration-assessment.md         # Monolith to Microservices Discovery and Wave Plan
 ├── backend/                            # Spring Boot Microservices (Java 17)
 │   ├── auth-service/                   # Generates and validates JWTs carrying tenant context
 │   ├── patient-service/                # Dynamic PostgreSQL schema-routing CRUD database layer
